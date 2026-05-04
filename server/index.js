@@ -1,42 +1,55 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
-const dotenv = require('dotenv');
-
-// 1. Load the .env file
-dotenv.config();
+require('dotenv').config();
 
 const app = express();
-app.use(express.json());
-app.use(cors());
 
-// 2. Connect to MongoDB Cloud
-// Add this check right before your connection
+// 1. Middlewares
+app.use(express.json());
+app.use(cors()); // This allows Vercel to access this API
+
+// 2. Database Connection
 const uri = process.env.MONGO_URI;
 
 if (!uri) {
-    console.log("❌ ERROR: The server cannot find the MONGO_URI variable. Check Render Dashboard.");
+    console.log("❌ ERROR: MONGO_URI is missing from Environment Variables!");
 } else {
-    console.log("📡 Attempting to connect to MongoDB...");
     mongoose.connect(uri)
         .then(() => console.log("✅ Successfully connected to MongoDB Cloud!"))
         .catch((err) => console.log("❌ Cloud connection error:", err.message));
 }
 
-const Donor = require('./models/Donor');
+// 3. Data Schema & Model
+const donorSchema = new mongoose.Schema({
+    name: String,
+    bloodGroup: String,
+    phone: String,
+    city: String,
+    date: { type: Date, default: Date.now }
+});
 
-// API to Register a Donor
+const Donor = mongoose.model('Donor', donorSchema);
+
+// 4. Routes
+// Test Route
+app.get('/', (req, res) => {
+    res.send("Cloud Blood Bank Server is Active!");
+});
+
+// Registration Route
 app.post('/api/register', async (req, res) => {
     try {
         const newDonor = new Donor(req.body);
         await newDonor.save();
-        res.status(201).json({ message: "Donor saved to Cloud successfully!" });
-    } catch (err) {
-        res.status(500).json({ error: "Failed to save donor" });
+        res.status(201).json({ message: "Donor Registered Successfully!" });
+    } catch (error) {
+        res.status(400).json({ error: "Registration Failed: " + error.message });
     }
 });
 
-const PORT = process.env.PORT || 5000;
+// 5. Start Server
+const PORT = process.env.PORT || 10000;
 app.listen(PORT, () => {
-    console.log(`Server running on http://localhost:${PORT}`);
+    console.log(`Server running on port ${PORT}`);
 });
