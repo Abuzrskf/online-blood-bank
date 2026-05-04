@@ -2,42 +2,55 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Admin - Blood Bank System</title>
+    <title>Admin Login - Blood Bank</title>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; padding: 20px; background: #f4f4f4; }
-        .admin-container { max-width: 1000px; margin: auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
-        h1 { color: #d32f2f; border-bottom: 2px solid #d32f2f; padding-bottom: 10px; text-align: center; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; margin-bottom: 40px; }
+        body { font-family: 'Segoe UI', sans-serif; background: #f4f4f4; margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; }
+        
+        /* Login Box Styling */
+        #login-gate { background: white; padding: 40px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); text-align: center; width: 350px; }
+        
+        /* Dashboard Styling (Hidden by default) */
+        #admin-dashboard { display: none; width: 90%; max-width: 1000px; background: white; padding: 25px; border-radius: 12px; margin: 20px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); height: auto; align-self: flex-start; }
+        
+        h1 { color: #d32f2f; }
+        input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; }
+        button { width: 100%; padding: 12px; background: #d32f2f; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; }
+        
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
         th, td { padding: 12px; border: 1px solid #ddd; text-align: left; }
         th { background-color: #d32f2f; color: white; }
-        .btn-delete { background: #ff4444; color: white; border: none; padding: 8px 12px; cursor: pointer; border-radius: 4px; font-weight: bold; }
-        .btn-delete:hover { background: #cc0000; }
-        nav { text-align: center; margin-bottom: 20px; }
-        nav a { color: #0056b3; text-decoration: none; font-weight: bold; margin: 0 10px; }
+        .btn-delete { background: #ff4444; color: white; padding: 5px 10px; border: none; cursor: pointer; border-radius: 4px; }
     </style>
 </head>
 <body>
 
-    <nav>
-        <a href="index.html">← Back to Home</a>
-    </nav>
+    <!-- 1. The Login Gate -->
+    <div id="login-gate">
+        <h1>Admin Access</h1>
+        <p>Please enter the administrator password</p>
+        <input type="password" id="adminPass" placeholder="Password">
+        <button onclick="checkAuth()">Login</button>
+        <p id="error-msg" style="color: red; display: none; margin-top: 10px;">Incorrect Password</p>
+        <br>
+        <a href="index.html" style="color: #666; font-size: 0.9rem;">Back to Home</a>
+    </div>
 
-    <div class="admin-container">
-        <h1>System Administration</h1>
-
-        <h3>Registered Donors (Supply)</h3>
+    <!-- 2. The Dashboard (Initially Hidden) -->
+    <div id="admin-dashboard">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h1>Admin Control Panel</h1>
+            <button onclick="logout()" style="width: auto; background: #333;">Logout</button>
+        </div>
+        
+        <h3>Registered Donors</h3>
         <table>
-            <thead>
-                <tr><th>Name</th><th>Group</th><th>City</th><th>Contact</th><th>Action</th></tr>
-            </thead>
+            <thead><tr><th>Name</th><th>Group</th><th>Contact</th><th>Action</th></tr></thead>
             <tbody id="donorTableBody"></tbody>
         </table>
 
-        <h3>Active Requests (Emergency Demand)</h3>
+        <h3>Active Requests</h3>
         <table>
-            <thead>
-                <tr><th>Patient</th><th>Hospital</th><th>Group</th><th>Contact</th></tr>
-            </thead>
+            <thead><tr><th>Patient</th><th>Hospital</th><th>Group</th><th>Contact</th></tr></thead>
             <tbody id="requestTableBody"></tbody>
         </table>
     </div>
@@ -45,23 +58,37 @@
     <script>
         const API_URL = 'https://blood-bank-api-35b9.onrender.com/api';
 
+        // Check password locally for simplicity
+        function checkAuth() {
+            const pass = document.getElementById('adminPass').value;
+            if (pass === 'admin123') { // Set your password here
+                document.getElementById('login-gate').style.display = 'none';
+                document.getElementById('admin-dashboard').style.display = 'block';
+                document.body.style.alignItems = 'flex-start'; // Adjust layout for dashboard
+                loadAdminData();
+            } else {
+                document.getElementById('error-msg').style.display = 'block';
+            }
+        }
+
+        function logout() {
+            location.reload(); // Refresh to lock the gate again
+        }
+
         async function loadAdminData() {
             try {
                 const res = await fetch(`${API_URL}/admin/data`);
                 const data = await res.json();
 
-                // Populate Donors with Delete Capability
                 document.getElementById('donorTableBody').innerHTML = data.donors.map(d => `
                     <tr>
                         <td>${d.name}</td>
                         <td>${d.bloodGroup}</td>
-                        <td>${d.city}</td>
                         <td>${d.phone}</td>
-                        <td><button class="btn-delete" onclick="deleteDonor('${d._id}')">Remove</button></td>
+                        <td><button class="btn-delete" onclick="deleteDonor('${d._id}')">Delete</button></td>
                     </tr>
                 `).join('');
 
-                // Populate Requests
                 document.getElementById('requestTableBody').innerHTML = data.requests.map(r => `
                     <tr>
                         <td>${r.patientName}</td>
@@ -70,20 +97,15 @@
                         <td>${r.phone}</td>
                     </tr>
                 `).join('');
-            } catch (err) { console.error("Admin fetch failed", err); }
+            } catch (err) { console.error("Fetch failed", err); }
         }
 
         async function deleteDonor(id) {
-            if (confirm("Permanently delete this donor record?")) {
-                const res = await fetch(`${API_URL}/donors/${id}`, { method: 'DELETE' });
-                if (res.ok) {
-                    alert("Record deleted.");
-                    loadAdminData(); // Refresh tables
-                }
+            if (confirm("Delete this record?")) {
+                await fetch(`${API_URL}/donors/${id}`, { method: 'DELETE' });
+                loadAdminData();
             }
         }
-
-        loadAdminData();
     </script>
 </body>
 </html>
