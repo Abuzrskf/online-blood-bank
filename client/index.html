@@ -5,68 +5,102 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Blood Bank Management</title>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; padding: 40px; background: #f0f2f5; display: flex; flex-direction: column; align-items: center; }
-        .form-container { background: white; padding: 30px; border-radius: 12px; width: 100%; max-width: 400px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
-        h2, h3 { color: #d32f2f; text-align: center; }
+        body { font-family: 'Segoe UI', sans-serif; padding: 20px; background: #f0f2f5; display: flex; flex-direction: column; align-items: center; margin: 0; }
+        
+        /* Navigation Styling */
+        nav { width: 100%; background: #333; padding: 15px; text-align: center; position: sticky; top: 0; z-index: 1000; margin-bottom: 30px; }
+        nav a { color: white; margin: 0 20px; text-decoration: none; font-weight: bold; font-size: 1.1rem; }
+        nav a:hover { color: #d32f2f; }
+
+        /* Side-by-Side Form Layout */
+        .main-container { display: flex; flex-direction: row; gap: 30px; justify-content: center; width: 100%; max-width: 1100px; flex-wrap: wrap; }
+        
+        .form-container { background: white; padding: 25px; border-radius: 12px; flex: 1; min-width: 350px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+        
+        h2, h3 { color: #333; text-align: center; margin-top: 0; }
         label { font-weight: bold; display: block; margin-top: 10px; }
         input, select, button { width: 100%; margin: 10px 0; padding: 12px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; }
-        button { background: #d32f2f; color: white; border: none; font-weight: bold; cursor: pointer; transition: 0.3s; }
-        button:hover { background: #b71c1c; }
         
-        #inventory-section { margin-top: 30px; width: 100%; max-width: 500px; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        /* Buttons */
+        .btn-donor { background: #d32f2f; color: white; border: none; font-weight: bold; cursor: pointer; }
+        .btn-request { background: #0056b3; color: white; border: none; font-weight: bold; cursor: pointer; }
+        button:hover { opacity: 0.9; }
+
+        /* Inventory Styling */
+        #inventory-section { width: 100%; max-width: 1100px; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin: 30px 0; }
         .inventory-grid { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
         .stock-card { background: #d32f2f; color: white; padding: 10px 15px; border-radius: 8px; text-align: center; min-width: 80px; }
+        
+        .admin-footer { margin-top: 40px; padding: 20px; text-align: center; border-top: 1px solid #ccc; width: 100%; }
     </style>
 </head>
 <body>
 
-    <!-- 1. Donor Form -->
-    <div class="form-container">
-        <h2>Donor Registration</h2>
-        <form id="bloodForm">
-            <label>Full Name</label>
-            <input type="text" id="name" placeholder="Enter name" required>
-            <label>Blood Group</label>
-            <select id="bloodGroup">
-                <option value="A+">A+</option><option value="A-">A-</option>
-                <option value="B+">B+</option><option value="B-">B-</option>
-                <option value="O+">O+</option><option value="O-">O-</option>
-                <option value="AB+">AB+</option><option value="AB-">AB-</option>
-            </select>
-            <label>Phone Number</label>
-            <input type="text" id="phone" placeholder="Contact number" required>
-            <label>City</label>
-            <input type="text" id="city" placeholder="Pune" required>
-            <button type="submit">Register to Cloud</button>
-        </form>
-    </div>
+    <!-- 1. Top Navigation with Admin Option -->
+    <nav>
+        <a href="index.html">🏠 Home</a>
+        <a href="admin.html">📊 Admin Dashboard</a>
+    </nav>
 
     <!-- 2. Inventory Display -->
     <div id="inventory-section">
         <h3>Live Blood Stock (Units)</h3>
-        <div id="inventory-display" class="inventory-grid"></div>
+        <div id="inventory-display" class="inventory-grid">
+            <!-- Data will load here via Script -->
+        </div>
     </div>
 
-    <!-- 3. Request Form (Corrected) -->
-    <div class="form-container" style="margin-top: 20px; border-top: 5px solid #0056b3;">
-        <h2 style="color: #0056b3;">Emergency Blood Request</h2>
-        <form id="requestForm">
-            <input type="text" id="pName" placeholder="Patient Name" required>
-            <input type="text" id="hospital" placeholder="Hospital Name" required>
-            
-            <!-- Added missing Blood Groups -->
-            <select id="reqGroup">
-                <option value="A+">A+</option><option value="A-">A-</option>
-                <option value="B+">B+</option><option value="B-">B-</option>
-                <option value="O+">O+</option><option value="O-">O-</option>
-                <option value="AB+">AB+</option><option value="AB-">AB-</option>
-            </select>
+    <!-- 3. Form Section (Side-by-Side) -->
+    <div class="main-container">
+        
+        <!-- Donor Form (Left) -->
+        <div class="form-container" style="border-top: 6px solid #d32f2f;">
+            <h2 style="color: #d32f2f;">Donor Registration</h2>
+            <form id="bloodForm">
+                <label>Full Name</label>
+                <input type="text" id="name" placeholder="Enter name" required>
+                <label>Blood Group</label>
+                <select id="bloodGroup">
+                    <option value="A+">A+</option><option value="A-">A-</option>
+                    <option value="B+">B+</option><option value="B-">B-</option>
+                    <option value="O+">O+</option><option value="O-">O-</option>
+                    <option value="AB+">AB+</option><option value="AB-">AB-</option>
+                </select>
+                <label>Phone Number</label>
+                <input type="text" id="phone" placeholder="Enter contact" required>
+                <label>City</label>
+                <input type="text" id="city" placeholder="e.g. Pune" required>
+                <button type="submit" class="btn-donor">Register to Cloud</button>
+            </form>
+        </div>
 
-            <!-- ADDED: The missing Phone Input that was causing the error -->
-            <input type="text" id="phoneRequest" placeholder="Contact Number" required>
-            
-            <button type="submit" style="background: #0056b3;">Post Urgent Request</button>
-        </form>
+        <!-- Request Form (Right) -->
+        <div class="form-container" style="border-top: 6px solid #0056b3;">
+            <h2 style="color: #0056b3;">Emergency Request</h2>
+            <form id="requestForm">
+                <label>Patient Name</label>
+                <input type="text" id="pName" placeholder="Patient's Name" required>
+                <label>Hospital</label>
+                <input type="text" id="hospital" placeholder="Hospital Name" required>
+                <label>Blood Group Needed</label>
+                <select id="reqGroup">
+                    <option value="A+">A+</option><option value="A-">A-</option>
+                    <option value="B+">B+</option><option value="B-">B-</option>
+                    <option value="O+">O+</option><option value="O-">O-</option>
+                    <option value="AB+">AB+</option><option value="AB-">AB-</option>
+                </select>
+                <label>Contact Number</label>
+                <input type="text" id="phoneRequest" placeholder="Family/Hospital contact" required>
+                <button type="submit" class="btn-request">Post Urgent Request</button>
+            </form>
+        </div>
+
+    </div>
+
+    <!-- 4. Explicit Admin Link (In case Nav is missed) -->
+    <div class="admin-footer">
+        <p>Are you a hospital administrator?</p>
+        <a href="admin.html" style="color: #d32f2f; font-weight: bold; text-decoration: underline;">Open Management Dashboard</a>
     </div>
 
 <script>
@@ -82,9 +116,10 @@
                     <strong>${item._id}</strong><br>${item.count} Bags
                 </div>
             `).join('');
-        } catch (err) { console.error("Inventory update failed"); }
+        } catch (err) { console.error("Inventory error", err); }
     }
 
+    // Donor Form Submission
     document.getElementById('bloodForm').onsubmit = async (e) => {
         e.preventDefault();
         const payload = {
@@ -98,40 +133,24 @@
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
         });
-        if (res.ok) { 
-            alert("✅ Donor Registered!"); 
-            document.getElementById('bloodForm').reset();
-            updateInventory(); 
-        }
+        if (res.ok) { alert("✅ Donor Registered!"); document.getElementById('bloodForm').reset(); updateInventory(); }
     };
 
+    // Request Form Submission
     document.getElementById('requestForm').onsubmit = async (e) => {
         e.preventDefault();
-        
-        // This was failing because 'phoneRequest' did not exist in your HTML
         const payload = {
             patientName: document.getElementById('pName').value,
             hospital: document.getElementById('hospital').value,
             bloodGroup: document.getElementById('reqGroup').value,
             phone: document.getElementById('phoneRequest').value
         };
-
-        try {
-            const res = await fetch(`${API_URL}/requests`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
-
-            if (res.ok) { 
-                alert("🚨 Emergency Request Posted to Cloud!"); 
-                document.getElementById('requestForm').reset();
-            } else {
-                alert("❌ Error posting request. Check your backend.");
-            }
-        } catch (err) {
-            alert("❌ Connection Error: Check if server is running.");
-        }
+        const res = await fetch(`${API_URL}/requests`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        if (res.ok) { alert("🚨 Request Saved!"); document.getElementById('requestForm').reset(); }
     };
 
     updateInventory();
