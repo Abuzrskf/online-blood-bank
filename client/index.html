@@ -50,7 +50,18 @@
             <!-- Data loads here -->
         </div>
     </div>
-
+    <div class="form-container" style="margin-top: 20px; border-top: 5px solid #0056b3;">
+    <h2>Emergency Blood Request</h2>
+    <form id="requestForm">
+        <input type="text" id="pName" placeholder="Patient Name" required>
+        <input type="text" id="hospital" placeholder="Hospital Name" required>
+        <select id="reqGroup">
+            <option value="A+">A+</option><option value="O+">O+</option>
+            <!-- Add all groups -->
+        </select>
+        <button type="submit" style="background: #0056b3;">Post Urgent Request</button>
+    </form>
+    </div>
     <script>
         const BASE_URL = 'https://blood-bank-api-35b9.onrender.com/api';
 

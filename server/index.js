@@ -58,3 +58,35 @@ const PORT = process.env.PORT || 10000;
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
 });
+
+// 1. New Blood Request Schema
+const requestSchema = new mongoose.Schema({
+    patientName: String,
+    bloodGroup: String,
+    hospital: String,
+    phone: String,
+    status: { type: String, default: "Pending" }
+});
+const BloodRequest = mongoose.model('BloodRequest', requestSchema);
+
+// 2. Route to Post a Request
+app.post('/api/requests', async (req, res) => {
+    try {
+        const newRequest = new BloodRequest(req.body);
+        await newRequest.save();
+        res.status(201).json({ message: "Blood Request Posted!" });
+    } catch (err) { res.status(400).json({ error: err.message }); }
+});
+
+// 3. Route to Get All Data (Admin View)
+app.get('/api/admin/all', async (req, res) => {
+    const donors = await Donor.find().sort({ date: -1 });
+    const requests = await BloodRequest.find();
+    res.json({ donors, requests });
+});
+
+// 4. Route to Delete a Donor (Admin Action)
+app.delete('/api/donors/:id', async (req, res) => {
+    await Donor.findByIdAndDelete(req.params.id);
+    res.json({ message: "Donor record removed successfully" });
+});
