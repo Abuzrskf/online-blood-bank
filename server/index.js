@@ -11,16 +11,17 @@ app.use(express.json());
 app.use(cors());
 
 // 2. Connect to MongoDB Cloud
+// Add this check right before your connection
 const uri = process.env.MONGO_URI;
 
-mongoose.connect(uri)
-    .then(() => console.log("✅ Successfully connected to MongoDB Cloud!"))
-    .catch((err) => console.log("❌ Cloud connection error:", err));
-
-// 3. Test route
-app.get('/', (req, res) => {
-    res.send("Cloud Blood Bank Server is Active!");
-});
+if (!uri) {
+    console.log("❌ ERROR: The server cannot find the MONGO_URI variable. Check Render Dashboard.");
+} else {
+    console.log("📡 Attempting to connect to MongoDB...");
+    mongoose.connect(uri)
+        .then(() => console.log("✅ Successfully connected to MongoDB Cloud!"))
+        .catch((err) => console.log("❌ Cloud connection error:", err.message));
+}
 
 const Donor = require('./models/Donor');
 
