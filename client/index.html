@@ -3,50 +3,76 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Blood Bank Registration</title>
+    <title>Blood Bank Management</title>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 40px; background: #f0f2f5; display: flex; justify-content: center; }
-        .form-container { background: white; padding: 30px; border-radius: 12px; shadow: 0 4px 6px rgba(0,0,0,0.1); width: 100%; max-width: 400px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
-        h2 { color: #d32f2f; text-align: center; margin-bottom: 20px; }
+        body { font-family: 'Segoe UI', sans-serif; padding: 40px; background: #f0f2f5; display: flex; flex-direction: column; align-items: center; }
+        .form-container { background: white; padding: 30px; border-radius: 12px; width: 100%; max-width: 400px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+        h2, h3 { color: #d32f2f; text-align: center; }
         label { font-weight: bold; display: block; margin-top: 10px; }
         input, select, button { width: 100%; margin: 10px 0; padding: 12px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; }
-        button { background: #d32f2f; color: white; border: none; font-weight: bold; cursor: pointer; transition: background 0.3s; margin-top: 20px; }
+        button { background: #d32f2f; color: white; border: none; font-weight: bold; cursor: pointer; transition: 0.3s; }
         button:hover { background: #b71c1c; }
+        
+        #inventory-section { margin-top: 30px; width: 100%; max-width: 500px; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        .inventory-grid { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+        .stock-card { background: #d32f2f; color: white; padding: 10px 15px; border-radius: 8px; text-align: center; min-width: 80px; }
     </style>
 </head>
 <body>
+
     <div class="form-container">
         <h2>Donor Registration</h2>
         <form id="bloodForm">
             <label>Full Name</label>
-            <input type="text" id="name" placeholder="Enter your name" required>
+            <input type="text" id="name" placeholder="Enter name" required>
             
             <label>Blood Group</label>
             <select id="bloodGroup">
-                <option value="A+">A+</option>
-                <option value="A-">A-</option>
-                <option value="B+">B+</option>
-                <option value="B-">B-</option>
-                <option value="O+">O+</option>
-                <option value="O-">O-</option>
-                <option value="AB+">AB+</option>
-                <option value="AB-">AB-</option>
+                <option value="A+">A+</option><option value="A-">A-</option>
+                <option value="B+">B+</option><option value="B-">B-</option>
+                <option value="O+">O+</option><option value="O-">O-</option>
+                <option value="AB+">AB+</option><option value="AB-">AB-</option>
             </select>
             
             <label>Phone Number</label>
-            <input type="text" id="phone" placeholder="e.g. 9876543210" required>
+            <input type="text" id="phone" required>
             
             <label>City</label>
-            <input type="text" id="city" placeholder="e.g. Pune" required>
+            <input type="text" id="city" required>
             
             <button type="submit">Register to Cloud</button>
         </form>
     </div>
 
+    <div id="inventory-section">
+        <h3>Live Blood Stock (Units)</h3>
+        <div id="inventory-display" class="inventory-grid">
+            <!-- Data loads here -->
+        </div>
+    </div>
+
     <script>
+        const BASE_URL = 'https://blood-bank-api-35b9.onrender.com/api';
+
+        // Fetch and display inventory
+        async function updateInventory() {
+            try {
+                const response = await fetch(`${BASE_URL}/inventory`);
+                const data = await response.json();
+                const display = document.getElementById('inventory-display');
+                
+                display.innerHTML = data.map(item => `
+                    <div class="stock-card">
+                        <strong>${item._id}</strong><br>
+                        ${item.count} Bags
+                    </div>
+                `).join('');
+            } catch (err) { console.error("Update failed", err); }
+        }
+
+        // Handle Form Submission
         document.getElementById('bloodForm').onsubmit = async (e) => {
             e.preventDefault();
-            
             const data = {
                 name: document.getElementById('name').value,
                 bloodGroup: document.getElementById('bloodGroup').value,
@@ -55,25 +81,22 @@
             };
 
             try {
-                // Pointing to your live Render Backend
-                const response = await fetch('https://blood-bank-api-35b9.onrender.com/api/register', {
+                const response = await fetch(`${BASE_URL}/register`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(data)
                 });
 
-                const result = await response.json();
-                
                 if (response.ok) {
-                    alert("✅ Success: " + result.message);
+                    alert("✅ Success: Donor Registered!");
                     document.getElementById('bloodForm').reset();
-                } else {
-                    alert("❌ Error: " + (result.error || "Registration failed"));
+                    updateInventory(); // Refresh the dashboard immediately
                 }
-            } catch (err) {
-                alert("❌ Connection Error: Ensure your Render server is live.");
-            }
+            } catch (err) { alert("❌ Server Error"); }
         };
+
+        // Initial Load
+        updateInventory();
     </script>
 </body>
 </html>
