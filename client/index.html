@@ -62,52 +62,68 @@
         <button type="submit" style="background: #0056b3;">Post Urgent Request</button>
     </form>
     </div>
-    <script>
-        const BASE_URL = 'https://blood-bank-api-35b9.onrender.com/api';
+<script>
+    const API_URL = 'https://blood-bank-api-35b9.onrender.com/api';
 
-        // Fetch and display inventory
-        async function updateInventory() {
-            try {
-                const response = await fetch(`${BASE_URL}/inventory`);
-                const data = await response.json();
-                const display = document.getElementById('inventory-display');
-                
-                display.innerHTML = data.map(item => `
-                    <div class="stock-card">
-                        <strong>${item._id}</strong><br>
-                        ${item.count} Bags
-                    </div>
-                `).join('');
-            } catch (err) { console.error("Update failed", err); }
-        }
+    // 1. Refresh Inventory Display
+    async function updateInventory() {
+        try {
+            const res = await fetch(`${API_URL}/inventory`);
+            const data = await res.json();
+            const display = document.getElementById('inventory-display');
+            display.innerHTML = data.map(item => `
+                <div style="background: #d32f2f; color: white; padding: 10px; border-radius: 5px; text-align: center; min-width: 80px;">
+                    <strong>${item._id}</strong><br>${item.count} Bags
+                </div>
+            `).join('');
+        } catch (err) { console.error("Inventory update failed"); }
+    }
 
-        // Handle Form Submission
-        document.getElementById('bloodForm').onsubmit = async (e) => {
-            e.preventDefault();
-            const data = {
-                name: document.getElementById('name').value,
-                bloodGroup: document.getElementById('bloodGroup').value,
-                phone: document.getElementById('phone').value,
-                city: document.getElementById('city').value
-            };
-
-            try {
-                const response = await fetch(`${BASE_URL}/register`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(data)
-                });
-
-                if (response.ok) {
-                    alert("✅ Success: Donor Registered!");
-                    document.getElementById('bloodForm').reset();
-                    updateInventory(); // Refresh the dashboard immediately
-                }
-            } catch (err) { alert("❌ Server Error"); }
+    // 2. Handle Donor Registration Form
+    document.getElementById('bloodForm').onsubmit = async (e) => {
+        e.preventDefault();
+        const payload = {
+            name: document.getElementById('name').value,
+            bloodGroup: document.getElementById('bloodGroup').value,
+            phone: document.getElementById('phone').value,
+            city: document.getElementById('city').value
         };
+        const res = await fetch(`${API_URL}/register`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        if (res.ok) { 
+            alert("✅ Donor Registered!"); 
+            document.getElementById('bloodForm').reset();
+            updateInventory(); // Refresh stock immediately
+        }
+    };
 
-        // Initial Load
-        updateInventory();
-    </script>
+    // 3. Handle Emergency Request Form
+    document.getElementById('requestForm').onsubmit = async (e) => {
+        e.preventDefault();
+        const payload = {
+            patientName: document.getElementById('pName').value,
+            hospital: document.getElementById('hospital').value,
+            bloodGroup: document.getElementById('reqGroup').value,
+            phone: document.getElementById('phoneRequest').value
+        };
+        const res = await fetch(`${API_URL}/requests`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        if (res.ok) { 
+            alert("🚨 Emergency Request Posted to Cloud!"); 
+            document.getElementById('requestForm').reset();
+        } else {
+            alert("❌ Error posting request. Check your backend.");
+        }
+    };
+
+    // Load inventory cards on page open
+    updateInventory();
+</script>
 </body>
 </html>

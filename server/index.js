@@ -7,86 +7,84 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 
-const uri = process.env.MONGO_URI;
+// --- DATABASE CONNECTION ---
+mongoose.connect(process.env.MONGO_URI)
+    .then(() => console.log("✅ MongoDB Connected Successfully"))
+    .catch(err => console.log("❌ Connection Error:", err));
 
-mongoose.connect(uri)
-    .then(() => console.log("✅ Connected to MongoDB Cloud!"))
-    .catch((err) => console.log("❌ Cloud connection error:", err.message));
-
-// Schema (Standard structure)
+// --- SCHEMAS & MODELS ---
+// Donor Schema for Supply Tracking
 const donorSchema = new mongoose.Schema({
-    name: String,
-    bloodGroup: String,
-    phone: String,
-    city: String,
+    name: String, 
+    bloodGroup: String, 
+    phone: String, 
+    city: String, 
+    date: { type: Date, default: Date.now }
+});
+
+// Request Schema for Emergency Demand
+const requestSchema = new mongoose.Schema({
+    patientName: String, 
+    hospital: String, 
+    bloodGroup: String, 
+    phone: String, 
     date: { type: Date, default: Date.now }
 });
 
 const Donor = mongoose.model('Donor', donorSchema);
+const BloodRequest = mongoose.model('BloodRequest', requestSchema);
 
 // --- ROUTES ---
 
-// 1. Registration Route
+// 1. Register a New Donor
 app.post('/api/register', async (req, res) => {
     try {
-        const newDonor = new Donor(req.body);
-        await newDonor.save();
+        const donor = new Donor(req.body);
+        await donor.save();
         res.status(201).json({ message: "Donor Registered Successfully!" });
-    } catch (error) {
-        res.status(400).json({ error: "Registration Failed" });
-    }
+    } catch (err) { res.status(400).json({ error: err.message }); }
 });
 
-// 2. NEW: Inventory Aggregation Route (Counts documents per group)
+// 2. Submit an Emergency Blood Request
+app.post('/api/requests', async (req, res) => {
+    try {
+        const bloodReq = new BloodRequest(req.body);
+        await bloodReq.save();
+        res.status(201).json({ message: "Emergency Request Saved to Cloud!" });
+    } catch (err) { res.status(400).json({ error: err.message }); }
+});
+
+// 3. Live Inventory Aggregation (Counts bags by blood group)
 app.get('/api/inventory', async (req, res) => {
     try {
         const stats = await Donor.aggregate([
             { $group: { _id: "$bloodGroup", count: { $sum: 1 } } }
         ]);
         res.json(stats);
+    } catch (err) { res.status(500).json({ error: "Aggregation failed" }); }
+});
+
+// Start Server
+const PORT = process.env.PORT || 10000;
+app.listen(PORT, () => console.log(`🚀 Server Running on Port ${PORT}`));
+
+// 1. Admin Route: Get ALL Donors and ALL Requests
+app.get('/api/admin/data', async (req, res) => {
+    try {
+        const donors = await Donor.find().sort({ date: -1 });
+        const requests = await BloodRequest.find().sort({ date: -1 });
+        res.json({ donors, requests });
     } catch (err) {
-        res.status(500).json({ error: "Aggregation failed" });
+        res.status(500).json({ error: "Failed to fetch admin data" });
     }
 });
 
-// 3. Test Route
-app.get('/', (req, res) => {
-    res.send("Cloud Blood Bank Server is Active!");
-});
-
-const PORT = process.env.PORT || 10000;
-app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
-});
-
-// 1. New Blood Request Schema
-const requestSchema = new mongoose.Schema({
-    patientName: String,
-    bloodGroup: String,
-    hospital: String,
-    phone: String,
-    status: { type: String, default: "Pending" }
-});
-const BloodRequest = mongoose.model('BloodRequest', requestSchema);
-
-// 2. Route to Post a Request
-app.post('/api/requests', async (req, res) => {
-    try {
-        const newRequest = new BloodRequest(req.body);
-        await newRequest.save();
-        res.status(201).json({ message: "Blood Request Posted!" });
-    } catch (err) { res.status(400).json({ error: err.message }); }
-});
-
-// 3. Route to Get All Data (Admin View)
-app.get('/api/admin/all', async (req, res) => {
-    const donors = await Donor.find().sort({ date: -1 });
-    const requests = await BloodRequest.find();
-    res.json({ donors, requests });
-});
-
-// 4. Route to Delete a Donor (Admin Action)
+// 2. Delete Route: Remove a donor by ID
 app.delete('/api/donors/:id', async (req, res) => {
-    await Donor.findByIdAndDelete(req.params.id);
-    res.json({ message: "Donor record removed successfully" });
+    try {
+        await Donor.findByIdAndDelete(req.params.id);
+        res.json({ message: "Donor record deleted successfully" });
+    } catch (err) {
+        res.status(500).json({ error: "Delete failed" });
+    }
 });

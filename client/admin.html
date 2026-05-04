@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin - Blood Bank Management</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; background: #f4f4f4; }
+        table { width: 100%; border-collapse: collapse; margin-bottom: 30px; background: white; }
+        th, td { padding: 12px; border: 1px solid #ddd; text-align: left; }
+        th { background-color: #d32f2f; color: white; }
+        .btn-delete { background: #ff4444; color: white; border: none; padding: 5px 10px; cursor: pointer; border-radius: 4px; }
+    </style>
+</head>
+<body>
+    <h1>Admin Control Panel</h1>
+
+    <h3>Registered Donors</h3>
+    <table>
+        <thead><tr><th>Name</th><th>Group</th><th>City</th><th>Action</th></tr></thead>
+        <tbody id="donorTableBody"></tbody>
+    </table>
+
+    <h3>Emergency Requests</h3>
+    <table id="requestTable">
+        <thead><tr><th>Patient</th><th>Hospital</th><th>Group</th></tr></thead>
+        <tbody id="requestTableBody"></tbody>
+    </table>
+
+    <script>
+        const API_URL = 'https://blood-bank-api-35b9.onrender.com/api';
+
+        async function loadData() {
+            const res = await fetch(`${API_URL}/admin/data`);
+            const data = await res.json();
+
+            // Populate Donors
+            document.getElementById('donorTableBody').innerHTML = data.donors.map(d => `
+                <tr>
+                    <td>${d.name}</td>
+                    <td>${d.bloodGroup}</td>
+                    <td>${d.city}</td>
+                    <td><button class="btn-delete" onclick="deleteDonor('${d._id}')">Delete</button></td>
+                </tr>
+            `).join('');
+
+            // Populate Requests
+            document.getElementById('requestTableBody').innerHTML = data.requests.map(r => `
+                <tr>
+                    <td>${r.patientName}</td>
+                    <td>${r.hospital}</td>
+                    <td>${r.bloodGroup}</td>
+                </tr>
+            `).join('');
+        }
+
+        async function deleteDonor(id) {
+            if(confirm("Permanently delete this donor?")) {
+                await fetch(`${API_URL}/donors/${id}`, { method: 'DELETE' });
+                loadData(); // Refresh list immediately
+            }
+        }
+
+        loadData();
+    </script>
+</body>
+</html>
